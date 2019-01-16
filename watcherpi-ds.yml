@@ -1,0 +1,47 @@
+apiVersion: apps/v1beta2
+kind: DaemonSet
+metadata:
+  namespace: pi-system
+  name: watcherpi
+  labels:
+    app: watcherpi
+spec:
+  selector:
+    matchLabels:
+      app: watcherpi
+  template:
+    metadata:
+      labels:
+        app: watcherpi
+    spec:
+      serviceAccountName: controllerpi
+      terminationGracePeriodSeconds: 0
+      hostNetwork: true
+      containers:
+      - name: watcherpi
+        image: amioranza/watcherpi:v0
+        imagePullPolicy: Always
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100Mi
+        securityContext:
+          privileged: true 
+        volumeMounts:
+        - mountPath: /dev/mem
+          name: mem
+        - mountPath: /dev/gpiomem
+          name: gpiomem
+      volumes:
+      - name: mem
+        hostPath:
+          # directory location on host
+          path: /dev/mem
+          # this field is optional
+          type: CharDevice
+      - name: gpiomem
+        hostPath:
+          # directory location on host
+          path: /dev/gpiomem
+          # this field is optional
+          type: CharDevice
