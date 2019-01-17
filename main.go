@@ -12,15 +12,28 @@ import (
 var pinMap map[int]bool
 
 func checkPINS() {
-	for i := 0; i < 40; i++ {
-		log.Printf("Checking PIN %v: %v\n", i, rpio.Pin(i).Read())
-		// filling the pinMap with the pin status
-		if rpio.Pin(i).Read() == 1 {
-			pinMap[i] = true
+	pinStatus := false
+	for i := 1; i < 41; i++ {
+		pin := rpio.Pin(i).Read()
+		// fmt.Printf(">>>>>>>>>>>>>>>>>>> %v - %v\n", i, pin)
+		if pin == 1 {
+			pinStatus = true
 		} else {
-			pinMap[i] = false
+			pinStatus = false
+		}
+		switch {
+		case pinStatus == pinMap[i]:
+			log.Printf("Pin %v (%v) status not changed\n", i, pinStatus)
+		case pinStatus != pinMap[i]:
+			pinMap[i] = pinStatus
+			notify(i, pinStatus)
+			log.Printf("Pin %v (%v) status changed\n", i, pinStatus)
 		}
 	}
+}
+
+func notify(pin int, status bool) {
+	fmt.Printf("%v - %v\n", pin, status)
 }
 
 func init() {
@@ -41,9 +54,6 @@ func main() {
 	for {
 		log.Println("Checking PINS")
 		checkPINS()
-		for key, value := range pinMap {
-			fmt.Println("| PIN ", key, "| STATUS ", value, "|")
-		}
 		log.Println("Sleeping 5s")
 		time.Sleep(5000 * time.Millisecond)
 	}
